@@ -3,8 +3,7 @@ divert(-1)#                                                  -*- Autoconf -*-
 # Base M4 layer.
 # Requires GNU M4.
 #
-# Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007,
-# 2008, 2009 Free Software Foundation, Inc.
+# Copyright (C) 1999-2012 Free Software Foundation, Inc.
 
 # This file is part of Autoconf.  This program is free
 # software; you can redistribute it and/or modify it under the
@@ -231,11 +230,12 @@ m4_define([m4_assert],
 ## ------------- ##
 
 
-# _m4_warn(CATEGORY, MESSAGE, STACK-TRACE)
-# ----------------------------------------
+# _m4_warn(CATEGORY, MESSAGE, [STACK-TRACE])
+# ------------------------------------------
 # Report a MESSAGE to the user if the CATEGORY of warnings is enabled.
 # This is for traces only.
-# The STACK-TRACE is a \n-separated list of "LOCATION: MESSAGE".
+# If present, STACK-TRACE is a \n-separated list of "LOCATION: MESSAGE",
+# where the last line (and no other) ends with "the top level".
 #
 # Within m4, the macro is a no-op.  This macro really matters
 # when autom4te post-processes the trace output.
@@ -736,7 +736,7 @@ m4_define([_m4_shiftn],
 
 # m4_shift2(...)
 # m4_shift3(...)
-# -----------------
+# --------------
 # Returns ... shifted twice, and three times.  Faster than m4_shiftn.
 m4_define([m4_shift2], [m4_shift(m4_shift($@))])
 m4_define([m4_shift3], [m4_shift(m4_shift(m4_shift($@)))])
@@ -950,7 +950,7 @@ m4_define([m4_make_list], [m4_join([,
 # m4_noquote(STRING)
 # ------------------
 # Return the result of ignoring all quotes in STRING and invoking the
-# macros it contains.  Amongst other things, this is useful for enabling
+# macros it contains.  Among other things, this is useful for enabling
 # macro invocations inside strings with [] blocks (for instance regexps
 # and help-strings).  On the other hand, since all quotes are disabled,
 # any macro expanded during this time that relies on nested [] quoting
@@ -1374,17 +1374,19 @@ m4_define([_m4_stack_reverse],
 m4_define([m4_cleardivert],
 [m4_if([$#], [0], [m4_fatal([$0: missing argument])],
        [_m4_divert_raw([-1])m4_undivert($@)_m4_divert_raw(
-	 _m4_divert(_m4_defn([_m4_divert_diversion])))])])
+	 _m4_divert(_m4_defn([_m4_divert_diversion]), [-]))])])
 
 
-# _m4_divert(DIVERSION-NAME or NUMBER)
-# ------------------------------------
+# _m4_divert(DIVERSION-NAME or NUMBER, [NOWARN])
+# ----------------------------------------------
 # If DIVERSION-NAME is the name of a diversion, return its number,
-# otherwise if it is a NUMBER return it.
+# otherwise if it is a NUMBER return it.  Issue a warning about
+# the use of a number instead of a name, unless NOWARN is provided.
 m4_define([_m4_divert],
 [m4_ifdef([_m4_divert($1)],
 	  [m4_indir([_m4_divert($1)])],
-	  [$1])])
+	  [m4_if([$2], [], [m4_warn([syntax],
+	     [prefer named diversions])])$1])])
 
 # KILL is only used to suppress output.
 m4_define([_m4_divert(KILL)],           -1)
@@ -1394,7 +1396,7 @@ m4_define([_m4_divert()],                0)
 
 
 # m4_divert_stack
-# ------------------
+# ---------------
 # Print the diversion stack, if it's nonempty.  The caller is
 # responsible for any leading or trailing newline.
 m4_define([m4_divert_stack],
@@ -1420,13 +1422,15 @@ m4_define([m4_divert],
 [_m4_divert_raw(_m4_divert([$1]))])
 
 
-# m4_divert_push(DIVERSION-NAME)
-# ------------------------------
+# m4_divert_push(DIVERSION-NAME, [NOWARN])
+# ----------------------------------------
 # Change the diversion stream to DIVERSION-NAME, while stacking old values.
+# For internal use only: if NOWARN is not empty, DIVERSION-NAME can be a
+# number instead of a name.
 m4_define([m4_divert_push],
 [m4_divert_stack_push([$0], [$1])]dnl
 [m4_pushdef([_m4_divert_diversion], [$1])]dnl
-[_m4_divert_raw(_m4_divert([$1]))])
+[_m4_divert_raw(_m4_divert([$1], [$2]))])
 
 
 # m4_divert_pop([DIVERSION-NAME])
@@ -1442,7 +1446,7 @@ m4_define([m4_divert_pop],
 [_m4_popdef([_m4_divert_stack], [_m4_divert_diversion])]dnl
 [m4_ifdef([_m4_divert_diversion], [],
 	   [m4_fatal([too many m4_divert_pop])])]dnl
-[_m4_divert_raw(_m4_divert(_m4_defn([_m4_divert_diversion])))])
+[_m4_divert_raw(_m4_divert(_m4_defn([_m4_divert_diversion]), [-]))])
 
 
 # m4_divert_text(DIVERSION-NAME, CONTENT)
@@ -1918,7 +1922,7 @@ m4_define([_m4_divert_dump])
 
 
 # m4_divert_require(DIVERSION, NAME-TO-CHECK, [BODY-TO-EXPAND])
-# --------------------------------------------------------------
+# -------------------------------------------------------------
 # Same as m4_require, but BODY-TO-EXPAND goes into the named DIVERSION;
 # requirements still go in the current diversion though.
 #
@@ -1928,7 +1932,7 @@ m4_define([m4_divert_require],
 [m4_if(_m4_divert_dump, [],
   [m4_fatal([$0($2): cannot be used outside of an m4_defun'd macro])])]dnl
 [m4_provide_if([$2], [],
-  [_m4_require_call([$2], [$3], _m4_divert([$1]))])])
+  [_m4_require_call([$2], [$3], _m4_divert([$1], [-]))])])
 
 
 # m4_defun(NAME, EXPANSION, [MACRO = m4_define])
@@ -1969,7 +1973,7 @@ m4_define([m4_defun],
 # m4_defun'd, we can add a parameter, similar to the third parameter
 # to m4_defun.
 m4_define([m4_defun_init],
-[m4_define([$1], [$3])m4_defun([$1],
+[m4_define([$1], [$3[]])m4_defun([$1],
    [$2[]_m4_popdef(]m4_dquote($[0])[)m4_indir(]m4_dquote($[0])dnl
 [m4_if(]m4_dquote($[#])[, [0], [], ]m4_dquote([,$]@)[))], [m4_pushdef])])
 
@@ -2079,7 +2083,7 @@ m4_if([$0], [m4_require], [[m4_defun]], [[AC_DEFUN]])['d macro])])]dnl
 m4_define([_m4_require_call],
 [m4_pushdef([_m4_divert_grow], m4_decr(_m4_divert_grow))]dnl
 [m4_pushdef([_m4_diverting([$1])])m4_pushdef([_m4_diverting], [$1])]dnl
-[m4_divert_push(_m4_divert_grow)]dnl
+[m4_divert_push(_m4_divert_grow, [-])]dnl
 [m4_if([$2], [], [$1], [$2])
 m4_provide_if([$1], [m4_set_remove([_m4_provide], [$1])],
   [m4_warn([syntax], [$1 is m4_require'd but not m4_defun'd])])]dnl
@@ -2096,7 +2100,8 @@ m4_provide_if([$1], [m4_set_remove([_m4_provide], [$1])],
 m4_define([_m4_require_check],
 [m4_if(_m4_defn([_m4_diverting]), [$2], [m4_ignore],
        m4_ifdef([_m4_diverting([$2])], [-]), [-], [m4_warn([syntax],
-   [$3: `$1' was expanded before it was required])_m4_require_call],
+   [$3: `$1' was expanded before it was required
+http://www.gnu.org/software/autoconf/manual/autoconf.html#Expanded-Before-Required])_m4_require_call],
        [m4_ignore])])
 
 
@@ -2167,7 +2172,7 @@ m4_defn([m4_cr_digits])dnl
 
 # m4_cr_symbols1
 # m4_cr_symbols2
-# -------------------------------
+# --------------
 m4_define([m4_cr_symbols1],
 m4_defn([m4_cr_Letters])dnl
 _)
@@ -2188,13 +2193,16 @@ m4_defn([m4_cr_digits])dnl
 # characters via m4_translit must deal with the fact that m4_translit does
 # not add quotes to the output.
 #
+# In EBCDIC, $ is immediately followed by *, which leads to problems
+# if m4_cr_all is inlined into a macro definition; so swap them.
+#
 # It is mainly useful in generating inverted character range maps, for use
 # in places where m4_translit is faster than an equivalent m4_bpatsubst;
 # the regex `[^a-z]' is equivalent to:
 #  m4_translit(m4_dquote(m4_defn([m4_cr_all])), [a-z])
 m4_define([m4_cr_all],
 m4_translit(m4_dquote(m4_format(m4_dquote(m4_for(
-  ,1,255,,[[%c]]))m4_for([i],1,255,,[,i]))), [-])-)
+  ,1,255,,[[%c]]))m4_for([i],1,255,,[,i]))), [$*-], [*$])-)
 
 
 # _m4_define_cr_not(CATEGORY)
@@ -2639,7 +2647,7 @@ dnl prefix1 shorter: pad to length of prefix, and reset cursor
 [$2]m4_define([m4_Cursor], m4_Indent)],
 	      [m4_format([%*s], m4_max([0],
   m4_eval(m4_Indent - m4_Cursor)), [])m4_define([m4_Cursor], m4_Indent)])]],
-dnl now, for each word, compute the curser after the word is output, then
+dnl now, for each word, compute the cursor after the word is output, then
 dnl check if the cursor would exceed the wrap column
 dnl if so, reset cursor, and insert newline and prefix
 dnl if not, insert the separator (usually a space)
@@ -2668,11 +2676,11 @@ m4_define([_m4_text_wrap_word],
 # will post-process.
 m4_define([m4_text_box],
 [m4_pushdef([m4_Border],
-	    m4_translit(m4_format([%*s], m4_decr(m4_qlen(_m4_expand([$1
+	    m4_translit(m4_format([[[%*s]]], m4_decr(m4_qlen(_m4_expand([$1
 ]))), []), [ ], m4_default_quoted([$2], [-])))]dnl
-[[##] m4_Border [##]
+[[##] _m4_defn([m4_Border]) [##]
 [##] $1 [##]
-[##] m4_Border [##]_m4_popdef([m4_Border])])
+[##] _m4_defn([m4_Border]) [##]_m4_popdef([m4_Border])])
 
 
 # m4_qlen(STRING)

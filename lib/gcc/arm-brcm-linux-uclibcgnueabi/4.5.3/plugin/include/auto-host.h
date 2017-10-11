@@ -116,7 +116,7 @@
 
 /* Define to enable LTO support. */
 #ifndef USED_FOR_TARGET
-#define ENABLE_LTO 1
+/* #undef ENABLE_LTO */
 #endif
 
 
@@ -835,13 +835,13 @@
 
 /* Define to 1 if you have the `elf_getshstrndx' function. */
 #ifndef USED_FOR_TARGET
-#define HAVE_ELF_GETSHSTRNDX 1
+/* #undef HAVE_ELF_GETSHSTRNDX */
 #endif
 
 
 /* Define if elf_getshstrndx has gABI conformant return values. */
 #ifndef USED_FOR_TARGET
-#define HAVE_ELF_GETSHSTRNDX_GABI 1
+/* #undef HAVE_ELF_GETSHSTRNDX_GABI */
 #endif
 
 

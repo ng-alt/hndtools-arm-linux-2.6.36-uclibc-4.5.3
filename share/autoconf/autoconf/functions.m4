@@ -1,7 +1,6 @@
 # This file is part of Autoconf.			-*- Autoconf -*-
 # Checking for functions.
-# Copyright (C) 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008,
-# 2009 Free Software Foundation, Inc.
+# Copyright (C) 2000-2012 Free Software Foundation, Inc.
 
 # This file is part of Autoconf.  This program is free
 # software; you can redistribute it and/or modify it under the
@@ -116,12 +115,30 @@ m4_define([_AC_FUNCS_EXPANSION],
 ])
 
 
+# _AC_REPLACE_FUNC(FUNCTION)
+# --------------------------
+# If FUNCTION exists, define HAVE_FUNCTION; else add FUNCTION.c
+# to the list of library objects.  FUNCTION must be literal.
+m4_define([_AC_REPLACE_FUNC],
+[AC_CHECK_FUNC([$1],
+  [_AH_CHECK_FUNC([$1])AC_DEFINE(AS_TR_CPP([HAVE_$1]))],
+  [_AC_LIBOBJ([$1])AC_LIBSOURCE([$1.c])])])
+
 # AC_REPLACE_FUNCS(FUNCTION...)
 # -----------------------------
+# For each FUNCTION in the whitespace separated list, perform the
+# equivalent of AC_CHECK_FUNC, then call AC_LIBOBJ if the function
+# was not found.
 AC_DEFUN([AC_REPLACE_FUNCS],
-[m4_map_args_w([$1], [AC_LIBSOURCE(], [.c)])]dnl
-[AC_CHECK_FUNCS([$1], , [_AC_LIBOBJ($ac_func)])
-])
+[_$0(m4_flatten([$1]))])
+
+m4_define([_AC_REPLACE_FUNCS],
+[AS_LITERAL_IF([$1],
+[m4_map_args_w([$1], [_AC_REPLACE_FUNC(], [)
+])],
+[AC_CHECK_FUNCS([$1],
+  [_AH_CHECK_FUNC([$ac_func])],
+  [_AC_LIBOBJ([$ac_func])])])])
 
 
 # AC_TRY_LINK_FUNC(FUNC, ACTION-IF-FOUND, ACTION-IF-NOT-FOUND)
@@ -308,23 +325,20 @@ AC_CACHE_CHECK([stack direction for C alloca],
 [AC_RUN_IFELSE([AC_LANG_SOURCE(
 [AC_INCLUDES_DEFAULT
 int
-find_stack_direction ()
+find_stack_direction (int *addr, int depth)
 {
-  static char *addr = 0;
-  auto char dummy;
-  if (addr == 0)
-    {
-      addr = &dummy;
-      return find_stack_direction ();
-    }
-  else
-    return (&dummy > addr) ? 1 : -1;
+  int dir, dummy = 0;
+  if (! addr)
+    addr = &dummy;
+  *addr = addr < &dummy ? 1 : addr == &dummy ? 0 : -1;
+  dir = depth ? find_stack_direction (addr, depth - 1) : 0;
+  return dir + dummy;
 }
 
 int
-main ()
+main (int argc, char **argv)
 {
-  return find_stack_direction () < 0;
+  return find_stack_direction (0, argc + !argv + 20) < 0;
 }])],
 	       [ac_cv_c_stack_direction=1],
 	       [ac_cv_c_stack_direction=-1],
@@ -346,6 +360,7 @@ AC_DEFINE_UNQUOTED(STACK_DIRECTION, $ac_cv_c_stack_direction)
 AN_FUNCTION([alloca], [AC_FUNC_ALLOCA])
 AN_HEADER([alloca.h], [AC_FUNC_ALLOCA])
 AC_DEFUN([AC_FUNC_ALLOCA],
+[AC_REQUIRE([AC_TYPE_SIZE_T])]dnl
 [# The Ultrix 4.2 mips builtin alloca declared by alloca.h only works
 # for constant arguments.  Useless!
 AC_CACHE_CHECK([for working alloca.h], ac_cv_working_alloca_h,
@@ -377,7 +392,7 @@ AC_CACHE_CHECK([for alloca], ac_cv_func_alloca_works,
  #pragma alloca
 #   else
 #    ifndef alloca /* predefined by HP cc +Olibcalls */
-char *alloca ();
+void *alloca (size_t);
 #    endif
 #   endif
 #  endif
@@ -660,7 +675,8 @@ AC_CHECK_FUNCS(setlocale)
 # We cannot check for <dwarf.h>, because Solaris 2 does not use dwarf (it
 # uses stabs), but it is still SVR4.  We cannot check for <elf.h> because
 # Irix 4.0.5F has the header but not the library.
-if test $ac_have_func = no && test "$ac_cv_lib_elf_elf_begin" = yes; then
+if test $ac_have_func = no && test "$ac_cv_lib_elf_elf_begin" = yes \
+    && test "$ac_cv_lib_kvm_kvm_open" = yes; then
   ac_have_func=yes
   AC_DEFINE(SVR4, 1, [Define to 1 on System V Release 4.])
 fi
@@ -1004,8 +1020,8 @@ static time_t time_t_max;
 static time_t time_t_min;
 
 /* Values we'll use to set the TZ environment variable.  */
-static char *tz_strings[] = {
-  (char *) 0, "TZ=GMT0", "TZ=JST-9",
+static const char *tz_strings[] = {
+  (const char *) 0, "TZ=GMT0", "TZ=JST-9",
   "TZ=EST+3EDT+2,M10.1.0/00:00:00,M2.3.0/00:00:00"
 };
 #define N_STRINGS (sizeof (tz_strings) / sizeof (tz_strings[0]))
@@ -1022,7 +1038,7 @@ spring_forward_gap ()
      instead of "TZ=America/Vancouver" in order to detect the bug even
      on systems that don't support the Olson extension, or don't have the
      full zoneinfo tables installed.  */
-  putenv ("TZ=PST8PDT,M4.1.0,M10.5.0");
+  putenv ((char*) "TZ=PST8PDT,M4.1.0,M10.5.0");
 
   tm.tm_year = 98;
   tm.tm_mon = 3;
@@ -1035,16 +1051,14 @@ spring_forward_gap ()
 }
 
 static int
-mktime_test1 (now)
-     time_t now;
+mktime_test1 (time_t now)
 {
   struct tm *lt;
   return ! (lt = localtime (&now)) || mktime (lt) == now;
 }
 
 static int
-mktime_test (now)
-     time_t now;
+mktime_test (time_t now)
 {
   return (mktime_test1 (now)
 	  && mktime_test1 ((time_t) (time_t_max - now))
@@ -1068,8 +1082,7 @@ irix_6_4_bug ()
 }
 
 static int
-bigtime_test (j)
-     int j;
+bigtime_test (int j)
 {
   struct tm tm;
   time_t now;
@@ -1113,7 +1126,7 @@ year_2050_test ()
      instead of "TZ=America/Vancouver" in order to detect the bug even
      on systems that don't support the Olson extension, or don't have the
      full zoneinfo tables installed.  */
-  putenv ("TZ=PST8PDT,M4.1.0,M10.5.0");
+  putenv ((char*) "TZ=PST8PDT,M4.1.0,M10.5.0");
 
   t = mktime (&tm);
 
@@ -1148,7 +1161,7 @@ main ()
   for (i = 0; i < N_STRINGS; i++)
     {
       if (tz_strings[i])
-	putenv (tz_strings[i]);
+	putenv ((char*) tz_strings[i]);
 
       for (t = 0; t <= time_t_max - delta; t += delta)
 	if (! mktime_test (t))
@@ -1258,6 +1271,7 @@ int
 main ()
 {
   char *data, *data2, *data3;
+  const char *cdata2;
   int i, pagesize;
   int fd, fd2;
 
@@ -1282,10 +1296,10 @@ main ()
   fd2 = open ("conftest.txt", O_RDWR | O_CREAT | O_TRUNC, 0600);
   if (fd2 < 0)
     return 4;
-  data2 = "";
-  if (write (fd2, data2, 1) != 1)
+  cdata2 = "";
+  if (write (fd2, cdata2, 1) != 1)
     return 5;
-  data2 = mmap (0, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED, fd2, 0L);
+  data2 = (char *) mmap (0, pagesize, PROT_READ | PROT_WRITE, MAP_SHARED, fd2, 0L);
   if (data2 == MAP_FAILED)
     return 6;
   for (i = 0; i < pagesize; ++i)
@@ -1442,7 +1456,7 @@ AC_CACHE_CHECK([types of arguments for select],
  done
 done
 # Provide a safe default value.
-: ${ac_cv_func_select_args='int,int *,struct timeval *'}
+: "${ac_cv_func_select_args=int,int *,struct timeval *}"
 ])
 ac_save_IFS=$IFS; IFS=','
 set dummy `echo "$ac_cv_func_select_args" | sed 's/\*/\*/g'`
@@ -1462,15 +1476,13 @@ rm -f conftest*
 # ---------------
 AC_DEFUN([AC_FUNC_SETPGRP],
 [AC_CACHE_CHECK(whether setpgrp takes no argument, ac_cv_func_setpgrp_void,
-[AC_RUN_IFELSE(
-[AC_LANG_PROGRAM([AC_INCLUDES_DEFAULT],
-[/* If this system has a BSD-style setpgrp which takes arguments,
-  setpgrp(1, 1) will fail with ESRCH and return -1, in that case
-  exit successfully. */
-  return setpgrp (1,1) != -1;])],
-	       [ac_cv_func_setpgrp_void=no],
-	       [ac_cv_func_setpgrp_void=yes],
-	       [AC_MSG_ERROR([cannot check setpgrp when cross compiling])])])
+	[AC_COMPILE_IFELSE(
+	   [AC_LANG_PROGRAM(
+	     [[#include <unistd.h>
+	       static int (*p) (void) = setpgrp;]],
+	     [[return setpgrp ();]])],
+	   [ac_cv_func_setpgrp_void=yes],
+	   [ac_cv_func_setpgrp_void=no])])
 if test $ac_cv_func_setpgrp_void = yes; then
   AC_DEFINE(SETPGRP_VOID, 1,
 	    [Define to 1 if the `setpgrp' function takes no argument.])
@@ -1662,6 +1674,7 @@ LIBS="-lintl $LIBS"])])dnl
 AN_FUNCTION([strnlen], [AC_FUNC_STRNLEN])
 AC_DEFUN([AC_FUNC_STRNLEN],
 [AC_REQUIRE([AC_USE_SYSTEM_EXTENSIONS])dnl
+AC_REQUIRE([AC_CANONICAL_HOST]) dnl for cross-compiles
 AC_CACHE_CHECK([for working strnlen], ac_cv_func_strnlen_working,
 [AC_RUN_IFELSE([AC_LANG_PROGRAM([AC_INCLUDES_DEFAULT], [[
 #define S "foobar"
@@ -1681,7 +1694,11 @@ AC_CACHE_CHECK([for working strnlen], ac_cv_func_strnlen_working,
 ]])],
 	       [ac_cv_func_strnlen_working=yes],
 	       [ac_cv_func_strnlen_working=no],
-	       [ac_cv_func_strnlen_working=no])])
+	       [# Guess no on AIX systems, yes otherwise.
+		case "$host_os" in
+		  aix*) ac_cv_func_strnlen_working=no;;
+		  *)    ac_cv_func_strnlen_working=yes;;
+		esac])])
 test $ac_cv_func_strnlen_working = no && AC_LIBOBJ([strnlen])
 ])# AC_FUNC_STRNLEN
 
@@ -1761,7 +1778,7 @@ AU_ALIAS([AC_UTIME_NULL], [AC_FUNC_UTIME_NULL])
 
 
 # AC_FUNC_FORK
-# -------------
+# ------------
 AN_FUNCTION([fork],  [AC_FUNC_FORK])
 AN_FUNCTION([vfork], [AC_FUNC_FORK])
 AC_DEFUN([AC_FUNC_FORK],
@@ -1822,7 +1839,7 @@ AC_DEFUN([_AC_FUNC_FORK],
 
 
 # _AC_FUNC_VFORK
-# -------------
+# --------------
 AC_DEFUN([_AC_FUNC_VFORK],
 [AC_CACHE_CHECK(for working vfork, ac_cv_func_vfork_works,
 [AC_RUN_IFELSE([AC_LANG_SOURCE([[/* Thanks to Paul Eggert for this test.  */
@@ -1921,7 +1938,7 @@ main ()
 
 
 # AU::AC_FUNC_VFORK
-# ------------
+# -----------------
 AU_ALIAS([AC_FUNC_VFORK], [AC_FUNC_FORK])
 
 # AU::AC_VFORK

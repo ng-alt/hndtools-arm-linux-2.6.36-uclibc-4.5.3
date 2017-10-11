@@ -1,4 +1,4 @@
-# Copyright (C) 2002, 2003, 2006, 2008, 2009 Free Software Foundation,
+# Copyright (C) 2002-2003, 2006, 2008-2012 Free Software Foundation,
 # Inc.
 
 # This program is free software: you can redistribute it and/or modify
@@ -35,7 +35,7 @@ Autom4te::ChannelDefs - channel definitions for Automake and helper functions
   verb ($MESSAGE, [%OPTIONS]);
   switch_warning ($CATEGORY);
   parse_WARNINGS ();
-  parse_warnings ($OPTION, $ARGUMENT);
+  parse_warnings ($OPTION, @ARGUMENT);
   Autom4te::ChannelDefs::set_strictness ($STRICTNESS_NAME);
 
 =head1 DESCRIPTION
@@ -47,7 +47,7 @@ shorthand function to output on specific channels.
 
 =cut
 
-use 5.005;
+use 5.006;
 use strict;
 use Exporter;
 
@@ -71,7 +71,7 @@ Fatal errors.  Use C<&fatal> to send messages over this channel.
 
 =item C<error>
 
-Common errors.   Use C<&error> to send messages over this channel.
+Common errors.  Use C<&error> to send messages over this channel.
 
 =item C<error-gnu>
 
@@ -112,7 +112,7 @@ Warnings about non-portable constructs.
 
 =item C<syntax>
 
-Warnings about weird syntax, unused variables, typos...
+Warnings about weird syntax, unused variables, typos ...
 
 =item C<unsupported>
 

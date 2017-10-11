@@ -44,7 +44,7 @@
    The ARM10TDMI core is the default for armv5t, so set
    SUBTARGET_CPU_DEFAULT to achieve this.  */
 #undef  SUBTARGET_CPU_DEFAULT
-#define SUBTARGET_CPU_DEFAULT TARGET_CPU_arm9tdmi
+#define SUBTARGET_CPU_DEFAULT TARGET_CPU_arm10tdmi
 
 /* TARGET_BIG_ENDIAN_DEFAULT is set in
    config.gcc for big endian configurations.  */

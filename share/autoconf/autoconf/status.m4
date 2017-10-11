@@ -1,8 +1,6 @@
 # This file is part of Autoconf.                       -*- Autoconf -*-
 # Parameterizing and creating config.status.
-# Copyright (C) 1992, 1993, 1994, 1995, 1996, 1998, 1999, 2000, 2001,
-# 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software
-# Foundation, Inc.
+# Copyright (C) 1992-1996, 1998-2012 Free Software Foundation, Inc.
 
 # This file is part of Autoconf.  This program is free
 # software; you can redistribute it and/or modify it under the
@@ -160,7 +158,7 @@ m4_define([_AC_FILE_DEPENDENCY_TRACE_COLON],
 
 
 # _AC_CONFIG_DEPENDENCY(MODE, DEST[:SOURCE1...])
-# ---------------------------------------------
+# ----------------------------------------------
 # MODE is `FILES', `HEADERS', or `LINKS'.
 #
 # Be sure that a missing dependency is expressed as a dependency upon
@@ -364,7 +362,7 @@ if test "x$ac_cr" = x; then
 fi
 ac_cs_awk_cr=`$AWK 'BEGIN { print "a\rb" }' </dev/null 2>/dev/null`
 if test "$ac_cs_awk_cr" = "a${ac_cr}b"; then
-  ac_cs_awk_cr='\r'
+  ac_cs_awk_cr='\\r'
 else
   ac_cs_awk_cr=$ac_cr
 fi
@@ -373,21 +371,21 @@ dnl Define the pipe that does the substitution.
 m4_ifdef([_AC_SUBST_FILES],
 [m4_define([_AC_SUBST_CMDS], [|
 if $ac_cs_awk_getline; then
-  $AWK -f "$tmp/subs.awk"
+  $AWK -f "$ac_tmp/subs.awk"
 else
-  $AWK -f "$tmp/subs.awk" | $SHELL
+  $AWK -f "$ac_tmp/subs.awk" | $SHELL
 fi])],
 [m4_define([_AC_SUBST_CMDS],
-[| $AWK -f "$tmp/subs.awk"])])dnl
+[| $AWK -f "$ac_tmp/subs.awk"])])dnl
 
-echo 'BEGIN {' >"$tmp/subs1.awk" &&
+echo 'BEGIN {' >"$ac_tmp/subs1.awk" &&
 _ACEOF
 
 m4_ifdef([_AC_SUBST_FILES],
 [# Create commands to substitute file output variables.
 {
   echo "cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1" &&
-  echo 'cat >>"\$tmp/subs1.awk" <<\\_ACAWK &&' &&
+  echo 'cat >>"\$ac_tmp/subs1.awk" <<\\_ACAWK &&' &&
   echo "$ac_subst_files" | sed 's/.*/F@<:@"&"@:>@="$&"/' &&
   echo "_ACAWK" &&
   echo "_ACEOF"
@@ -403,7 +401,7 @@ rm -f conf$$files.sh
   echo "_ACEOF"
 } >conf$$subs.sh ||
   AC_MSG_ERROR([could not make $CONFIG_STATUS])
-ac_delim_num=`echo "$ac_subst_vars" | grep -c '$'`
+ac_delim_num=`echo "$ac_subst_vars" | grep -c '^'`
 ac_delim='%!_!# '
 for ac_last_try in false false false false false :; do
   . ./conf$$subs.sh ||
@@ -448,7 +446,7 @@ dnl - Writing `$ 0' prevents expansion by both the shell and m4 here.
 dnl
 dnl m4-double-quote most of the scripting for readability.
 [cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
-cat >>"\$tmp/subs1.awk" <<\\_ACAWK &&
+cat >>"\$ac_tmp/subs1.awk" <<\\_ACAWK &&
 _ACEOF
 sed -n '
 h
@@ -496,7 +494,7 @@ t delim
 rm -f conf$$subs.awk
 cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 _ACAWK
-cat >>"\$tmp/subs1.awk" <<_ACAWK &&
+cat >>"\$ac_tmp/subs1.awk" <<_ACAWK &&
   for (key in S) S_is_set[key] = 1
   FS = ""
 ]m4_ifdef([_AC_SUBST_FILES],
@@ -548,21 +546,29 @@ if sed "s/$ac_cr//" < /dev/null > /dev/null 2>&1; then
   sed "s/$ac_cr\$//; s/$ac_cr/$ac_cs_awk_cr/g"
 else
   cat
-fi < "$tmp/subs1.awk" > "$tmp/subs.awk" \
+fi < "$ac_tmp/subs1.awk" > "$ac_tmp/subs.awk" \
   || AC_MSG_ERROR([could not setup config files machinery])
 _ACEOF
 
-# VPATH may cause trouble with some makes, so we remove $(srcdir),
-# ${srcdir} and @srcdir@ from VPATH if srcdir is ".", strip leading and
+# VPATH may cause trouble with some makes, so we remove sole $(srcdir),
+# ${srcdir} and @srcdir@ entries from VPATH if srcdir is ".", strip leading and
 # trailing colons and then remove the whole line if VPATH becomes empty
 # (actually we leave an empty line to preserve line numbers).
 if test "x$srcdir" = x.; then
-  ac_vpsub=['/^[	 ]*VPATH[	 ]*=/{
-s/:*\$(srcdir):*/:/
-s/:*\${srcdir}:*/:/
-s/:*@srcdir@:*/:/
-s/^\([^=]*=[	 ]*\):*/\1/
+  ac_vpsub=['/^[	 ]*VPATH[	 ]*=[	 ]*/{
+h
+s///
+s/^/:/
+s/[	 ]*$/:/
+s/:\$(srcdir):/:/g
+s/:\${srcdir}:/:/g
+s/:@srcdir@:/:/g
+s/^:*//
 s/:*$//
+x
+s/\(=[	 ]*\).*/\1/
+G
+s/\n//
 s/^[^=]*=[	 ]*$//
 }']
 fi
@@ -665,28 +671,29 @@ m4_map_args_sep([$0_ADJUST_DIR(], [)], [
 m4_ifndef([AC_DATAROOTDIR_CHECKED], [$ac_datarootdir_hack
 ])dnl
 "
-eval sed \"\$ac_sed_extra\" "$ac_file_inputs" m4_defn([_AC_SUBST_CMDS]) >$tmp/out \
-  || AC_MSG_ERROR([could not create $ac_file])
+eval sed \"\$ac_sed_extra\" "$ac_file_inputs" m4_defn([_AC_SUBST_CMDS]) \
+  >$ac_tmp/out || AC_MSG_ERROR([could not create $ac_file])
 
 m4_ifndef([AC_DATAROOTDIR_CHECKED],
 [test -z "$ac_datarootdir_hack$ac_datarootdir_seen" &&
-  { ac_out=`sed -n '/\${datarootdir}/p' "$tmp/out"`; test -n "$ac_out"; } &&
-  { ac_out=`sed -n '/^[[	 ]]*datarootdir[[	 ]]*:*=/p' "$tmp/out"`; test -z "$ac_out"; } &&
+  { ac_out=`sed -n '/\${datarootdir}/p' "$ac_tmp/out"`; test -n "$ac_out"; } &&
+  { ac_out=`sed -n '/^[[	 ]]*datarootdir[[	 ]]*:*=/p' \
+      "$ac_tmp/out"`; test -z "$ac_out"; } &&
   AC_MSG_WARN([$ac_file contains a reference to the variable `datarootdir'
-which seems to be undefined.  Please make sure it is defined.])
+which seems to be undefined.  Please make sure it is defined])
 ])dnl
 
-  rm -f "$tmp/stdin"
+  rm -f "$ac_tmp/stdin"
   case $ac_file in
-  -) cat "$tmp/out" && rm -f "$tmp/out";;
-  *) rm -f "$ac_file" && mv "$tmp/out" "$ac_file";;
+  -) cat "$ac_tmp/out" && rm -f "$ac_tmp/out";;
+  *) rm -f "$ac_file" && mv "$ac_tmp/out" "$ac_file";;
   esac \
   || AC_MSG_ERROR([could not create $ac_file])
 dnl This would break Makefile dependencies:
-dnl  if diff "$ac_file" "$tmp/out" >/dev/null 2>&1; then
+dnl  if diff "$ac_file" "$ac_tmp/out" >/dev/null 2>&1; then
 dnl    echo "$ac_file is unchanged"
 dnl  else
-dnl     rm -f "$ac_file"; mv "$tmp/out" "$ac_file"
+dnl     rm -f "$ac_file"; mv "$ac_tmp/out" "$ac_file"
 dnl  fi
 ])# _AC_OUTPUT_FILE
 
@@ -728,7 +735,7 @@ m4_define([_AC_OUTPUT_HEADERS_PREPARE],
 # This happens for instance with `./config.status Makefile'.
 if test -n "$CONFIG_HEADERS"; then
 dnl This `||' list is finished at the end of _AC_OUTPUT_HEADERS_PREPARE.
-cat >"$tmp/defines.awk" <<\_ACAWK ||
+cat >"$ac_tmp/defines.awk" <<\_ACAWK ||
 BEGIN {
 _ACEOF
 
@@ -740,8 +747,8 @@ _ACEOF
 # handling of long lines.
 ac_delim='%!_!# '
 for ac_last_try in false false :; do
-  ac_t=`sed -n "/$ac_delim/p" confdefs.h`
-  if test -z "$ac_t"; then
+  ac_tt=`sed -n "/$ac_delim/p" confdefs.h`
+  if test -z "$ac_tt"; then
     break
   elif $ac_last_try; then
     AC_MSG_ERROR([could not make $CONFIG_HEADERS])
@@ -875,19 +882,19 @@ m4_define([_AC_OUTPUT_HEADER],
   if test x"$ac_file" != x-; then
     {
       AS_ECHO(["/* $configure_input  */"]) \
-      && eval '$AWK -f "$tmp/defines.awk"' "$ac_file_inputs"
-    } >"$tmp/config.h" \
+      && eval '$AWK -f "$ac_tmp/defines.awk"' "$ac_file_inputs"
+    } >"$ac_tmp/config.h" \
       || AC_MSG_ERROR([could not create $ac_file])
-    if diff "$ac_file" "$tmp/config.h" >/dev/null 2>&1; then
+    if diff "$ac_file" "$ac_tmp/config.h" >/dev/null 2>&1; then
       AC_MSG_NOTICE([$ac_file is unchanged])
     else
       rm -f "$ac_file"
-      mv "$tmp/config.h" "$ac_file" \
+      mv "$ac_tmp/config.h" "$ac_file" \
 	|| AC_MSG_ERROR([could not create $ac_file])
     fi
   else
     AS_ECHO(["/* $configure_input  */"]) \
-      && eval '$AWK -f "$tmp/defines.awk"' "$ac_file_inputs" \
+      && eval '$AWK -f "$ac_tmp/defines.awk"' "$ac_file_inputs" \
       || AC_MSG_ERROR([could not create -])
   fi
 dnl If running for Automake, be ready to perform additional
@@ -974,7 +981,7 @@ m4_define([_AC_OUTPUT_LINK],
     rm -f "$ac_file"
 
     # Try a relative symlink, then a hard link, then a copy.
-    case $srcdir in
+    case $ac_source in
     [[\\/$]]* | ?:[[\\/]]* ) ac_rel_source=$ac_source ;;
 	*) ac_rel_source=$ac_top_build_prefix$ac_source ;;
     esac
@@ -1263,7 +1270,7 @@ m4_ifdef([_AC_SEEN_CONFIG(HEADERS)], [DEFS=-DHAVE_CONFIG_H], [AC_OUTPUT_MAKE_DEF
 dnl Commands to run before creating config.status.
 AC_OUTPUT_COMMANDS_PRE()dnl
 
-: ${CONFIG_STATUS=./config.status}
+: "${CONFIG_STATUS=./config.status}"
 ac_write_fail=0
 ac_clean_files_save=$ac_clean_files
 ac_clean_files="$ac_clean_files $CONFIG_STATUS"
@@ -1294,7 +1301,7 @@ if test "$no_create" != yes; then
   exec AS_MESSAGE_LOG_FD>>config.log
   # Use ||, not &&, to avoid exiting from the if with $? = 1, which
   # would make configure fail if this is the last instruction.
-  $ac_cs_success || AS_EXIT
+  $ac_cs_success || AS_EXIT([1])
 fi
 dnl config.status should not do recursion.
 AC_PROVIDE_IFELSE([AC_CONFIG_SUBDIRS], [_AC_OUTPUT_SUBDIRS()])dnl
@@ -1456,9 +1463,14 @@ ac_need_defaults=:
 while test $[#] != 0
 do
   case $[1] in
-  --*=*)
+  --*=?*)
     ac_option=`expr "X$[1]" : 'X\([[^=]]*\)='`
     ac_optarg=`expr "X$[1]" : 'X[[^=]]*=\(.*\)'`
+    ac_shift=:
+    ;;
+  --*=)
+    ac_option=`expr "X$[1]" : 'X\([[^=]]*\)='`
+    ac_optarg=
     ac_shift=:
     ;;
   *)
@@ -1483,6 +1495,7 @@ m4_ifdef([_AC_SEEN_CONFIG(FILES)], [dnl
     $ac_shift
     case $ac_optarg in
     *\'*) ac_optarg=`AS_ECHO(["$ac_optarg"]) | sed "s/'/'\\\\\\\\''/g"` ;;
+    '') AC_MSG_ERROR([missing file argument]) ;;
     esac
     AS_VAR_APPEND([CONFIG_FILES], [" '$ac_optarg'"])
     ac_need_defaults=false;;
@@ -1529,7 +1542,7 @@ cat >>$CONFIG_STATUS <<_ACEOF || ac_write_fail=1
 dnl Check this before opening the log, to avoid a bug on MinGW,
 dnl which prohibits the recursive instance from truncating an open log.
 if \$ac_cs_recheck; then
-  set X '$SHELL' '$[0]' $ac_configure_args \$ac_configure_extra_args --no-create --no-recursion
+  set X $SHELL '$[0]' $ac_configure_args \$ac_configure_extra_args --no-create --no-recursion
   shift
   \AS_ECHO(["running CONFIG_SHELL=$SHELL \$[*]"]) >&AS_MESSAGE_FD
   CONFIG_SHELL='$SHELL'
@@ -1610,16 +1623,21 @@ fi
 # Hook for its removal unless debugging.
 # Note that there is a small window in which the directory will not be cleaned:
 # after its creation but before its name has been assigned to `$tmp'.
+dnl For historical reasons, AS_TMPDIR must continue to place the results
+dnl in $tmp; but we swap to the namespace-clean $ac_tmp to avoid issues
+dnl with any CONFIG_COMMANDS playing with the common variable name $tmp.
 $debug ||
 {
-  tmp=
+  tmp= ac_tmp=
   trap 'exit_status=$?
-  { test -z "$tmp" || test ! -d "$tmp" || rm -fr "$tmp"; } && exit $exit_status
+  : "${ac_tmp:=$tmp}"
+  { test ! -d "$ac_tmp" || rm -fr "$ac_tmp"; } && exit $exit_status
 ' 0
   trap 'AS_EXIT([1])' 1 2 13 15
 }
 dnl The comment above AS_TMPDIR says at most 4 chars are allowed.
 AS_TMPDIR([conf], [.])
+ac_tmp=$tmp
 
 m4_ifdef([_AC_SEEN_CONFIG(FILES)], [_AC_OUTPUT_FILES_PREPARE])[]dnl
 m4_ifdef([_AC_SEEN_CONFIG(HEADERS)], [_AC_OUTPUT_HEADERS_PREPARE])[]dnl
@@ -1657,7 +1675,7 @@ do
     for ac_f
     do
       case $ac_f in
-      -) ac_f="$tmp/stdin";;
+      -) ac_f="$ac_tmp/stdin";;
       *) # Look for the file first in the build tree, then in the source tree
 	 # (if the path is not absolute).  The absolute path cannot be DOS-style,
 	 # because $ac_f cannot contain `:'.
@@ -1666,7 +1684,7 @@ do
 	   [[\\/$]]*) false;;
 	   *) test -f "$srcdir/$ac_f" && ac_f="$srcdir/$ac_f";;
 	   esac ||
-	   AC_MSG_ERROR([cannot find input file: `$ac_f']);;
+	   AC_MSG_ERROR([cannot find input file: `$ac_f'], [1]);;
       esac
       case $ac_f in *\'*) ac_f=`AS_ECHO(["$ac_f"]) | sed "s/'/'\\\\\\\\''/g"`;; esac
       AS_VAR_APPEND([ac_file_inputs], [" '$ac_f'"])
@@ -1691,7 +1709,7 @@ do
     esac
 
     case $ac_tag in
-    *:-:* | *:-) cat >"$tmp/stdin" \
+    *:-:* | *:-) cat >"$ac_tmp/stdin" \
       || AC_MSG_ERROR([could not create $ac_file]) ;;
     esac
     ;;

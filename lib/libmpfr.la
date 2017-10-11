@@ -17,7 +17,7 @@ old_library=''
 inherited_linker_flags=''
 
 # Libraries that this one depends upon.
-dependency_libs=' -L/projects/toolchains_build/buildroot-2012.02-brcm/output/host/lib -L/projects/hnd/tools/linux/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib /projects/hnd/tools/linux/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib/libgmp.la'
+dependency_libs=' -L/tmp/out/host/lib -L/tmp/arm-linux-2.6.36-uclibc-4.5.3/lib /tmp/arm-linux-2.6.36-uclibc-4.5.3/lib/libgmp.la'
 
 # Names of additional weak libraries provided by this library
 weak_library_names=''
@@ -38,4 +38,4 @@ dlopen=''
 dlpreopen=''
 
 # Directory that this library needs to be installed in:
-libdir='/projects/hnd/tools/linux/hndtools-arm-linux-2.6.36-uclibc-4.5.3/lib'
+libdir='/tmp/arm-linux-2.6.36-uclibc-4.5.3/lib'

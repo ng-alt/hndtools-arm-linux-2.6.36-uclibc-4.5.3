@@ -6,8 +6,7 @@ eval 'case $# in 0) exec /usr/bin/perl -S "$0";; *) exec /usr/bin/perl -S "$0" "
     if 0;
 
 # autoreconf - install the GNU Build System in a directory tree
-# Copyright (C) 1994, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006,
-# 2007, 2008, 2009 Free Software Foundation, Inc.
+# Copyright (C) 1994, 1999-2012 Free Software Foundation, Inc.
 
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -35,7 +34,7 @@ BEGIN
   # that can handle redirection and quote arguments correctly,
   # e.g.: COMMAND.COM.  For DJGPP always use the shell that configure
   # has detected.
-  $ENV{'SHELL'} = '/bin/sh' if ($^O eq 'dos');
+  $ENV{'SHELL'} = '/bin/bash' if ($^O eq 'dos');
 }
 
 use Autom4te::ChannelDefs;
@@ -87,8 +86,8 @@ Library directories:
   -B, --prepend-include=DIR  prepend directory DIR to search path
   -I, --include=DIR          append directory DIR to search path
 
-The environment variables AUTOCONF, AUTOHEADER, AUTOMAKE, ACLOCAL,
-AUTOPOINT, LIBTOOLIZE, M4, and MAKE are honored.
+The environment variables AUTOM4TE, AUTOCONF, AUTOHEADER, AUTOMAKE,
+ACLOCAL, AUTOPOINT, LIBTOOLIZE, M4, and MAKE are honored.
 
 Report bugs to <bug-autoconf\@gnu.org>.
 GNU Autoconf home page: <http://www.gnu.org/software/autoconf/>.
@@ -97,8 +96,8 @@ General help using GNU software: <http://www.gnu.org/gethelp/>.
 
 # $VERSION
 # --------
-$version = "autoreconf (GNU Autoconf) 2.65
-Copyright (C) 2009 Free Software Foundation, Inc.
+$version = "autoreconf (GNU Autoconf) 2.69
+Copyright (C) 2012 Free Software Foundation, Inc.
 License GPLv3+/Autoconf: GNU GPL version 3 or later
 <http://gnu.org/licenses/gpl.html>, <http://gnu.org/licenses/exceptions.html>
 This is free software: you are free to change and redistribute it.
@@ -123,8 +122,12 @@ my $install = 0;
 my $symlink = 0;
 # Does aclocal support --force?
 my $aclocal_supports_force = 0;
+# Does aclocal support -Wfoo?
+my $aclocal_supports_warnings = 0;
 # Does automake support --force-missing?
 my $automake_supports_force_missing = 0;
+# Does automake support -Wfoo?
+my $automake_supports_warnings = 0;
 
 my @prepend_include;
 my @include;
@@ -183,8 +186,12 @@ sub parse_args ()
 	}
     }
 
-  $aclocal_supports_force = `$aclocal --help 2>/dev/null` =~ /--force/;
-  $automake_supports_force_missing = `$automake --help 2>/dev/null` =~ /--force-missing/;
+  my $aclocal_help = `$aclocal --help 2>/dev/null`;
+  my $automake_help = `$automake --help 2>/dev/null`;
+  $aclocal_supports_force = $aclocal_help =~ /--force/;
+  $aclocal_supports_warnings = $aclocal_help =~ /--warnings/;
+  $automake_supports_force_missing = $automake_help =~ /--force-missing/;
+  $automake_supports_warnings = $automake_help =~ /--warnings/;
 
   # Dispatch autoreconf's option to the tools.
   # --include;
@@ -243,7 +250,9 @@ sub parse_args ()
       $autoconf   .= $warn;
       $autoheader .= $warn;
       $automake   .= $warn
-	if `$automake --help` =~ /--warnings/;
+	if $automake_supports_warnings;
+      $aclocal    .= $warn
+        if $aclocal_supports_warnings;
     }
 }
 

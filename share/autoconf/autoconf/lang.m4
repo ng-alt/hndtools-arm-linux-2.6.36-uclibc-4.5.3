@@ -1,7 +1,6 @@
 # This file is part of Autoconf.                       -*- Autoconf -*-
 # Programming languages support.
-# Copyright (C) 2000, 2001, 2002, 2004, 2005, 2006, 2007, 2008, 2009
-# Free Software Foundation, Inc.
+# Copyright (C) 2000-2002, 2004-2012 Free Software Foundation, Inc.
 
 # This file is part of Autoconf.  This program is free
 # software; you can redistribute it and/or modify it under the
@@ -192,16 +191,30 @@ m4_define([AC_LANG_DEFINE],
 # ----------------------
 # Save the BODY in `conftest.$ac_ext'.  Add a trailing new line.
 AC_DEFUN([AC_LANG_CONFTEST],
-[_AC_LANG_DISPATCH([$0], _AC_LANG, $@)])
+[m4_pushdef([_AC_LANG_DEFINES_PROVIDED],
+  [m4_warn([syntax], [$0: no AC_LANG_SOURCE call detected in body])])]dnl
+[_AC_LANG_DISPATCH([$0], _AC_LANG, $@)]dnl
+[[]_AC_LANG_DEFINES_PROVIDED[]m4_popdef([_AC_LANG_DEFINES_PROVIDED])])
 
 
 # AC_LANG_CONFTEST()(BODY)
 # ------------------------
 # Default implementation of AC_LANG_CONFTEST.
+# This version assumes that you can't inline confdefs.h into your
+# language, and as such, it is safe to blindly call
+# AC_LANG_DEFINES_PROVIDED.  Language-specific overrides should
+# remove this call if AC_LANG_SOURCE does inline confdefs.h.
 m4_define([AC_LANG_CONFTEST()],
 [cat > conftest.$ac_ext <<_ACEOF
-$1
+AC_LANG_DEFINES_PROVIDED[]$1
 _ACEOF])
+
+# AC_LANG_DEFINES_PROVIDED
+# ------------------------
+# Witness macro that all prior AC_DEFINE results have been output
+# into the current expansion, to silence warning from AC_LANG_CONFTEST.
+m4_define([AC_LANG_DEFINES_PROVIDED],
+[m4_define([_$0])])
 
 
 # AC_LANG_SOURCE(BODY)
@@ -209,7 +222,7 @@ _ACEOF])
 # Produce a valid source for the current language, which includes the
 # BODY, and as much as possible `confdefs.h'.
 AC_DEFUN([AC_LANG_SOURCE],
-[_AC_LANG_DISPATCH([$0], _AC_LANG, $@)])
+[AC_LANG_DEFINES_PROVIDED[]_AC_LANG_DISPATCH([$0], _AC_LANG, $@)])
 
 
 # AC_LANG_SOURCE()(BODY)
@@ -237,7 +250,7 @@ m4_define([_AC_LANG_NULL_PROGRAM()],
 
 
 # _AC_LANG_NULL_PROGRAM
-# ----------------------
+# ---------------------
 # Produce valid source for the current language that does
 # nothing.
 AC_DEFUN([_AC_LANG_NULL_PROGRAM],
@@ -245,7 +258,7 @@ AC_DEFUN([_AC_LANG_NULL_PROGRAM],
 
 
 # _AC_LANG_IO_PROGRAM
-# -----------------------------------
+# -------------------
 # Produce valid source for the current language that creates
 # a file.  (This is used when detecting whether executables
 # work, e.g. to detect cross-compiling.)
@@ -700,7 +713,7 @@ ac_objext=$OBJEXT
 ## ------------------------------- ##
 
 # AC_LANG_WERROR
-# ------------------
+# --------------
 # Treat warnings from the current language's preprocessor, compiler, and
 # linker as fatal errors.
 AC_DEFUN([AC_LANG_WERROR],
