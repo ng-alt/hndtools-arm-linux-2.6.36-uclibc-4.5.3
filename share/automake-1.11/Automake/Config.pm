@@ -18,6 +18,7 @@ package Automake::Config;
 use strict;
 
 use 5.006;
+use File::Basename;
 require Exporter;
 
 our @ISA = qw (Exporter);
@@ -28,7 +29,7 @@ our @EXPORT = qw ($APIVERSION $PACKAGE $VERSION $libdir $perl_threads);
 our $APIVERSION = '1.11';
 our $PACKAGE = 'automake';
 our $VERSION = '1.11.1';
-our $libdir = '/projects/hnd/tools/linux/hndtools-arm-linux-2.6.36-uclibc-4.5.3/share/automake-1.11';
+our $libdir = dirname(readlink($0) || $0) . '/../share/automake-1.11';
 our $perl_threads = 1;
 
 1;;

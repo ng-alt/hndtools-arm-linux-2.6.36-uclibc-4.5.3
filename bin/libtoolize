@@ -948,11 +948,16 @@ seen_ltdl=false
 ltdl_mode=
 
 # Locations for important files:
-prefix=/projects/hnd/tools/linux/hndtools-arm-linux-2.6.36-uclibc-4.5.3
-datadir=/projects/hnd/tools/linux/hndtools-arm-linux-2.6.36-uclibc-4.5.3/share
-pkgdatadir=/projects/hnd/tools/linux/hndtools-arm-linux-2.6.36-uclibc-4.5.3/share/libtool
-pkgltdldir=/projects/hnd/tools/linux/hndtools-arm-linux-2.6.36-uclibc-4.5.3/share/libtool
-aclocaldir=/projects/hnd/tools/linux/hndtools-arm-linux-2.6.36-uclibc-4.5.3/share/aclocal
+prog=$0
+while [ -L $prog ] ; do
+  prog=`ls -l $prog | awk '{ print $11 }'`
+done
+
+prefix=${prog%/*}
+datadir=${prefix}/../share
+pkgdatadir=${prefix}/../share/libtool
+pkgltdldir=${prefix}/../share/libtool
+aclocaldir=${prefix}/../share/aclocal
 auxdir=
 macrodir=
 ltdldir=
